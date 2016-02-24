@@ -290,7 +290,7 @@ class TestHdfsSystemProducerTestSuite extends Logging {
       assertTrue(results.length == 1)
       assertTrue(bytesWritten > 0L)
 
-      val atf = new AvroFSInput(FileContext.getFileContext(dfs.getConf), results.head.getPath)
+      val atf = new AvroFSInput(FileContext.getFileContext(), results.head.getPath)
       val schema = ReflectData.get().getSchema(atc.getClass)
       val datumReader = new ReflectDatumReader[Object](schema)
       val tfReader = DataFileReader.openReader(atf, datumReader)
@@ -330,7 +330,7 @@ class TestHdfsSystemProducerTestSuite extends Logging {
       assertEquals(2, results.length)
 
       results.foreach { r =>
-        val atf = new AvroFSInput(FileContext.getFileContext(dfs.getConf), r.getPath)
+        val atf = new AvroFSInput(FileContext.getFileContext(), r.getPath)
         val schema = ReflectData.get().getSchema(atc.getClass)
         val datumReader = new ReflectDatumReader[Object](schema)
         val tfReader = DataFileReader.openReader(atf, datumReader)
