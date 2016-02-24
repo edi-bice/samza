@@ -19,7 +19,7 @@
 
 package org.apache.samza.system.hdfs.writer
 
-import org.apache.avro.file.DataFileWriter
+import org.apache.avro.file.{CodecFactory, DataFileWriter}
 import org.apache.avro.reflect.{ReflectData, ReflectDatumWriter}
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.io.IOUtils
@@ -28,7 +28,10 @@ import org.apache.samza.system.OutgoingMessageEnvelope
 import org.apache.samza.system.hdfs.HdfsConfig
 
 /**
-  * Created by ebice on 1/29/2016.
+  * Implentation of HdfsWriter for Avro data files. Stores in a file a sequence of data conforming to a schema.
+  * The schema is stored in the file with the data. Each datum in a file is of the same schema.
+  * Data is grouped into blocks. A synchronization marker is written between blocks, so that files may be split.
+  * Blocks may be compressed.
   */
 class AvroDataFileHdfsWriter (dfs: FileSystem, systemName: String, config: HdfsConfig)
   extends HdfsWriter[DataFileWriter[Object]](dfs, systemName, config) {
@@ -36,18 +39,6 @@ class AvroDataFileHdfsWriter (dfs: FileSystem, systemName: String, config: HdfsC
   val batchSize = config.getWriteBatchSizeRecords(systemName)
   val bucketer = Some(Bucketer.getInstance(systemName, config))
   var recordsWritten = 0L
-
-  /**
-    *  Accepts a human-readable compression type from the job properties file such as
-    *  "gzip", "snappy", or "none" - returns an appropriate CompressionCodec.
-    */
-  def getCompressionCodec(compressionType: String) = {
-    compressionType match {
-      case "snappy" => new SnappyCodec()
-      case "gzip"   => new GzipCodec()
-      case _        => new DefaultCodec()
-    }
-  }
 
   override def flush: Unit = writer.map { _.flush }
 
@@ -79,6 +70,7 @@ class AvroDataFileHdfsWriter (dfs: FileSystem, systemName: String, config: HdfsC
     val schema = ReflectData.get().getSchema(record.getClass)
     val datumWriter = new ReflectDatumWriter[Object](schema)
     val fileWriter = new DataFileWriter[Object](datumWriter)
+    fileWriter.setCodec(CodecFactory.fromString(config.getCompressionType(systemName)))
     Some(fileWriter.create(schema, dfs.create(path)))
   }
 
