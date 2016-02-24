@@ -70,7 +70,8 @@ class AvroDataFileHdfsWriter (dfs: FileSystem, systemName: String, config: HdfsC
     val schema = ReflectData.get().getSchema(record.getClass)
     val datumWriter = new ReflectDatumWriter[Object](schema)
     val fileWriter = new DataFileWriter[Object](datumWriter)
-    fileWriter.setCodec(CodecFactory.fromString(config.getCompressionType(systemName)))
+    val cn = config.getCompressionType(systemName)
+    if (cn != "none") fileWriter.setCodec(CodecFactory.fromString(cn))
     Some(fileWriter.create(schema, dfs.create(path)))
   }
 
