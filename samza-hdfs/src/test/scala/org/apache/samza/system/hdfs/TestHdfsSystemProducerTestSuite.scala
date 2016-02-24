@@ -68,6 +68,7 @@ object TestHdfsSystemProducerTestSuite {
   class AvroTestClass(a1: Long, b2: String) {
     var a: Long = a1
     var b: String = b2
+    def this() = this(0L, "")
   }
 
   val hdfsFactory = new TestHdfsSystemFactory()
