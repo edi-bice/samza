@@ -29,7 +29,7 @@ import org.apache.avro.file.{SeekableFileInput, CodecFactory, DataFileWriter, Da
 import org.apache.avro.reflect.{ReflectDatumReader, ReflectDatumWriter, ReflectData}
 import org.apache.avro.specific.SpecificDatumReader
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileStatus, FileSystem, Path, PathFilter}
+import org.apache.hadoop.fs._
 import org.apache.hadoop.hdfs.{DFSConfigKeys,MiniDFSCluster}
 import org.apache.hadoop.io.{SequenceFile, BytesWritable, LongWritable, Text}
 import org.apache.hadoop.io.SequenceFile.Reader
@@ -290,7 +290,7 @@ class TestHdfsSystemProducerTestSuite extends Logging {
       assertTrue(results.length == 1)
       assertTrue(bytesWritten > 0L)
 
-      val atf = new SeekableFileInput(new File(results.head.getPath.toString))
+      val atf = new AvroFSInput(FileContext.getFileContext(dfs.getConf), results.head.getPath)
       val schema = ReflectData.get().getSchema(atc.getClass)
       val datumReader = new ReflectDatumReader[Object](schema)
       val tfReader = DataFileReader.openReader(atf, datumReader)
@@ -324,12 +324,13 @@ class TestHdfsSystemProducerTestSuite extends Logging {
       producer.get.stop
       producer = None
 
-      val results = cluster.get.getFileSystem.listStatus(testWritePath(AVRO_BATCH_JOB_NAME))
+      val dfs = cluster.get.getFileSystem
+      val results = dfs.listStatus(testWritePath(AVRO_BATCH_JOB_NAME))
       // systems.samza-hdfs-test-batch-job-text.producer.hdfs.write.batch.size.records=10
       assertEquals(2, results.length)
 
       results.foreach { r =>
-        val atf = new SeekableFileInput(new File(r.getPath.toString))
+        val atf = new AvroFSInput(FileContext.getFileContext(dfs.getConf), r.getPath)
         val schema = ReflectData.get().getSchema(atc.getClass)
         val datumReader = new ReflectDatumReader[Object](schema)
         val tfReader = DataFileReader.openReader(atf, datumReader)
