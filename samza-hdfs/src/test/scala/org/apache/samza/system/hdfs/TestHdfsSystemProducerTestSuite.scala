@@ -65,11 +65,17 @@ object TestHdfsSystemProducerTestSuite {
   val EXPECTED = Array[String]("small_data", "medium_data", "large_data")
   val LUMP = new scala.util.Random().nextString(BATCH_SIZE)
 
-  class AvroTestClass(a1: Long, b2: String) {
+  case class AvroTestClass(a1: Long, b2: String)
+  /*{
     var a: Long = a1
     var b: String = b2
     def this() = this(0L, "")
-  }
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: AvroTestClass => that.is
+      }
+    }
+  }*/
 
   val hdfsFactory = new TestHdfsSystemFactory()
   val propsFactory = new PropertiesConfigFactory()
@@ -297,7 +303,7 @@ class TestHdfsSystemProducerTestSuite extends Logging {
       val tfReader = DataFileReader.openReader(atf, datumReader)
       val atc2 = tfReader.next().asInstanceOf[AvroTestClass]
 
-      assertEquals(atc, atc2)
+      assertTrue(atc == atc2)
 
     } finally {
       producer.map { _.stop }
@@ -336,7 +342,7 @@ class TestHdfsSystemProducerTestSuite extends Logging {
         val datumReader = new ReflectDatumReader[Object](schema)
         val tfReader = DataFileReader.openReader(atf, datumReader)
         val atc2 = tfReader.next().asInstanceOf[AvroTestClass]
-        assertEquals(atc, atc2)
+        assertTrue(atc == atc2)
       }
 
     } finally {
