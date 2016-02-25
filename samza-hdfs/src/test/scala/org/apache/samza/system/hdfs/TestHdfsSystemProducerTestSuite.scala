@@ -65,17 +65,9 @@ object TestHdfsSystemProducerTestSuite {
   val EXPECTED = Array[String]("small_data", "medium_data", "large_data")
   val LUMP = new scala.util.Random().nextString(BATCH_SIZE)
 
-  case class AvroTestClass(a1: Long, b2: String)
-  /*{
-    var a: Long = a1
-    var b: String = b2
+  case class AvroTestClass(a1: Long, b2: String) {
     def this() = this(0L, "")
-    override def equals(that: Any): Boolean = {
-      that match {
-        case that: AvroTestClass => that.is
-      }
-    }
-  }*/
+  }
 
   val hdfsFactory = new TestHdfsSystemFactory()
   val propsFactory = new PropertiesConfigFactory()
